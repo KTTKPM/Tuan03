@@ -1,19 +1,42 @@
 package iuh.fit.se;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import iuh.fit.se.payment.BasePayment;
+import iuh.fit.se.payment.Payment;
+import iuh.fit.se.payment.PaymentContext;
+import iuh.fit.se.payment.decorator.DiscountCodeDecorator;
+import iuh.fit.se.payment.decorator.ProcessingFeeDecorator;
+import iuh.fit.se.payment.strategy.CreditCardStrategy;
+import iuh.fit.se.payment.strategy.PayPalStrategy;
+
+import java.math.BigDecimal;
+
 public class Main {
     public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        Payment creditCardPayment = new BasePayment(
+                "ORD-001",
+                new BigDecimal("100.00"),
+                new CreditCardStrategy("Truong Cong Hai", "**** **** **** 1234")
+        );
+        creditCardPayment = new ProcessingFeeDecorator(creditCardPayment, new BigDecimal("2.5"));
+        creditCardPayment = new DiscountCodeDecorator(creditCardPayment, "SAVE10", new BigDecimal("10"));
 
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
+        Payment paypalPayment = new BasePayment(
+                "ORD-002",
+                new BigDecimal("80.00"),
+                new PayPalStrategy("hai.student@example.com")
+        );
+        paypalPayment = new DiscountCodeDecorator(paypalPayment, "SAVE5", new BigDecimal("5"));
+        paypalPayment = new ProcessingFeeDecorator(paypalPayment, new BigDecimal("3"));
 
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
-        }
+        PaymentContext context1 = new PaymentContext(creditCardPayment);
+        context1.process();
+
+        PaymentContext context2 = new PaymentContext(paypalPayment);
+        context2.process();
+
+        System.out.println("\n=== Conclusion ===");
+        System.out.println("State Pattern: quản lý vòng đời thanh toán (Created -> Processing -> Completed/Failed).");
+        System.out.println("Strategy Pattern: thay đổi phương thức thanh toán (Credit Card, PayPal) mà không sửa luồng xử lý.");
+        System.out.println("Decorator Pattern: thêm phí xử lý/mã giảm giá linh hoạt, có thể kết hợp theo nhu cầu.");
     }
 }
